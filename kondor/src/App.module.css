@@ -1,0 +1,26 @@
+
+.sovietFont {
+    font-family: 'Bolshevik', sans-serif;
+    color: rgb(205,37,0);
+}
+
+.centerText {
+    padding-top: 15px;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: xx-large;
+}
+
+.gameWindow {
+    border: 1px solid rgb(205,37,0);
+    margin-top: 50px;
+    height: 80vh;
+    width: 60vw;
+    margin-left: 20vw;
+}
+
+.blackBackground {
+    background-color: rgb(12,12,12);
+    min-height: 100vh;
+}
