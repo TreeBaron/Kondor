@@ -10,8 +10,9 @@ const App: React.FC = () => {
     if (window.Phaser && phaserGameRef.current && !gameInstanceRef.current) {
         const config = {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        parent: 'phaser-game-container', 
+        width: '100%',
+        height: '100%',
             scene: {
                     preload: preload,
                     create: create
@@ -71,8 +72,8 @@ const App: React.FC = () => {
         <div className={`${styles.sovietFont} ${styles.centerText}`}>
           IKS KONDOR
         </div>
-        <div ref={phaserGameRef} className={styles.gameWindow}/>
-      </div>
+        <div id={`phaser-game-container`} ref={phaserGameRef} className={styles.gameWindow}/>
+        </div>
     </>
   );
 }
