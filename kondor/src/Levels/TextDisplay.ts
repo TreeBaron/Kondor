@@ -1,4 +1,5 @@
 import { inXSeconds, inXMilliseconds } from "./Helper.ts";
+import Phaser from "phaser";
 
 // Text display
 export class TextDisplay {
@@ -8,7 +9,7 @@ export class TextDisplay {
   typeTextTimer: Date;
   text: string = "";
   textToWrite: string = "";
-  delay: Date = inXSeconds(5);
+  delay?: Date;
   textObject: Phaser.GameObjects.Text;
   destroyed: Boolean = false;
   seconds: number;
@@ -24,9 +25,9 @@ export class TextDisplay {
   ) {
     const marginTop = 25;
     const marginLeft = 130;
-    this.textObject = level.add.text(140 + marginLeft + 25, marginTop, "", {
-      fontFamily: "Bolshevik, Roboto, Helvetica, serif",
-      fontSize: "42px",
+    this.textObject = level.add.text(marginLeft + 25, marginTop, "", {
+      fontFamily: "Roboto, Helvetica, comic sans, serif",
+      fontSize: "24px",
       backgroundColor: "white",
       color: "#CD2500",
     });
@@ -37,14 +38,21 @@ export class TextDisplay {
       this.text = textValue;
     }
 
-    this.image = level.add.image(70 + marginLeft, 80 + marginTop, character);
+    this.image = level.add.image(marginLeft, 80 + marginTop, character);
+    this.image?.setPosition(this.image.x + this.image.width / 2, this.image.y);
+
+    if (this.image) {
+      this.textObject.setPosition(
+        this.textObject.x + this.image.x,
+        this.textObject.y
+      );
+    }
     this.image?.setScrollFactor(0);
     this.image?.setVisible(false);
   }
 
   start() {
     this.typeTextTimer = new Date();
-    this.delay = inXSeconds(this.seconds);
     this.typeTextTimer = new Date();
     this.started = true;
     if (this.image) {
@@ -66,6 +74,14 @@ export class TextDisplay {
 
     if (
       this.shouldTypeOutText &&
+      this.textToWrite === this.text &&
+      this.delay === undefined
+    ) {
+      this.delay = inXSeconds(this.seconds);
+    }
+
+    if (
+      this.shouldTypeOutText &&
       this.textToWrite != this.text &&
       new Date() > this.typeTextTimer
     ) {
@@ -75,7 +91,11 @@ export class TextDisplay {
       this.textObject.setText(this.text);
     }
 
-    if (new Date() > this.delay) {
+    if (this.delay && new Date() > this.delay) {
+      if (this.text != this.textToWrite) {
+        return;
+      }
+
       this.destroyed = true;
       this.textObject.destroy();
       if (this.image) {

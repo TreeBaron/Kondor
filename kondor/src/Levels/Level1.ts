@@ -21,6 +21,12 @@ let movingStars2: Phaser.GameObjects.Image[] = [];
 let needsUpdateCall: any[] = [];
 let messages: TextDisplay[] = [];
 
+let keyW;
+let keyA;
+let keyS;
+let keyD;
+let keySpace;
+
 function getConfig(): Partial<Phaser.Types.Core.GameConfig> {
   return {
     type: Phaser.AUTO,
@@ -58,10 +64,18 @@ function preload() {
   console.log("preload() started.");
 
   this.load.image("star", "assets/bluestar.png");
+
+  // ANIMATIONS
   this.load.spritesheet("player", "assets/planes_08A.png", {
     frameWidth: 96,
     frameHeight: 96,
     endFrame: 19,
+  });
+
+  this.load.spritesheet("banana", "assets/spinningbanana.png", {
+    frameWidth: 50,
+    frameHeight: 25,
+    endFrame: 9,
   });
 
   // CHARACTERS
@@ -69,11 +83,27 @@ function preload() {
   this.load.image("anya", "assets/Anya_B.png");
   this.load.image("dimitri", "assets/Dimitri_B.png");
   this.load.image("alexi", "assets/Alexi_B.png");
+
+  // Friends lol
+  this.load.image("andrew", "assets/andrew.png");
+  this.load.image("walter", "assets/walter.png");
+  this.load.image("marshall", "assets/marshall.png");
+  this.load.image("jd", "assets/jd.png");
+  this.load.image("john", "assets/john.png");
+  this.load.image("nancie", "assets/nancie.png");
+  this.load.image("joebiden", "assets/joebiden.png");
 }
 
 // create is called once, after preload
 function create() {
   console.log("create() started.");
+
+  // KEYS
+  keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
+  keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
+  keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
+  keyW = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
+  keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
   // GET CAMERA INFO
   const mainCamera = this.cameras.main;
@@ -94,6 +124,15 @@ function create() {
 
   // PLAYER SETUP
   this.anims.create({
+    key: "bananabanana",
+    frames: this.anims.generateFrameNumbers("banana", {
+      start: 0,
+      end: 9,
+      repeat: -1,
+    }),
+    frameRate: 10,
+  });
+  this.anims.create({
     key: "right",
     frames: this.anims.generateFrameNumbers("player", {
       start: 12,
@@ -110,7 +149,6 @@ function create() {
     }),
     frameRate: 10,
   });
-
   this.anims.create({
     key: "straight",
     frames: this.anims.generateFrameNumbers("player", {
@@ -130,6 +168,7 @@ function create() {
   player.setBounce(0.2);
   player.setCollideWorldBounds(true);
   player.anims.play("straight", true);
+  player.canFire = true;
 
   // CAMERA FOLLOWS PLAYER
   this.cameras.main.startFollow(player);
@@ -157,8 +196,59 @@ function create() {
   }
 
   // SETUP MESSAGES
-  say("nensi", "Hello there.", 3, this);
-  say("anya", "General Kenobi.", 3, this);
+  say(
+    "andrew",
+    "John I'm sick of your shitposts,\nI'm deleting the shitposting channel",
+    1,
+    this
+  );
+  say(
+    "john",
+    "You can't do this to me!!\nDo you know how much I've sacrificed!?!!?",
+    1,
+    this
+  );
+  say(
+    "andrew",
+    "This discord deserves a better class of citizen\n you will pay for your shitposts\nI've already planned what will be the biggest attack since...",
+    0,
+    this
+  );
+  say("marshall", "woah let's keep it PG edge lord", 1, this);
+  say(
+    "andrew",
+    "Johns shitposting has gotten out of hand\n as a punishment at 3:22, JD will...",
+    0,
+    this
+  );
+  say("jd", "STEAL YOUR LETTUCE!!!!", 2, this);
+  say("john", "NOOOOOOOOOOOOOOOOOOOOOOO!!!!", 2, this);
+  say(
+    "walter",
+    "*monotone*\n Do not worry, I will provide you with\n tech support to stop JD.",
+    2,
+    this
+  );
+  say("marshall", "And I can do your taxes.", 1, this);
+  say("nancie", "June and I can help too :3", 1, this);
+  say(
+    "john",
+    "Thank you all for your support. I just wish...\nJoe Biden were here...",
+    2,
+    this
+  );
+  say("joebiden", "Did somebody say corn pop?", 2, this);
+  say(
+    "andrew",
+    "Your demented old man can't\n save your lettuce. \nJD go get him!",
+    1,
+    this
+  );
+  say("jd", "It's morbin time.", 1, this);
+  say("walter", "Look out!", 1, this);
+
+  //say("nensi", "Hello there.", 3, this);
+  //say("anya", "General Kenobi.", 3, this);
   //say("anya", "General Kenobi", 15, this);
   initializeMessagesChain();
 }
@@ -168,10 +258,10 @@ function update() {
   let cursors = this.input.keyboard.createCursorKeys();
 
   // LEFT AND RIGHT
-  if (cursors.left.isDown) {
+  if (cursors.left.isDown || keyA.isDown) {
     player.setVelocityX(-1 * playerSpeedLeftAndRight);
     player.anims.play("left", true);
-  } else if (cursors.right.isDown) {
+  } else if (cursors.right.isDown || keyD.isDown) {
     player.setVelocityX(playerSpeedLeftAndRight);
     player.anims.play("right", true);
   } else {
@@ -180,12 +270,27 @@ function update() {
   }
 
   // UP AND DOWN
-  if (cursors.up.isDown) {
+  if (cursors.up.isDown || keyW.isDown) {
     player.setVelocityY(-1 * playerSpeedForward);
-  } else if (cursors.down.isDown) {
+  } else if (cursors.down.isDown || keyS.isDown) {
     player.setVelocityY(0);
   } else {
     player.setVelocityY(0);
+  }
+
+  // SHOOTING
+  if (keySpace.isDown && player.canFire) {
+    let banana = this.physics.add.sprite(player.x, player.y - 50, "banana");
+    banana.setBounce(1.0);
+    banana.setCollideWorldBounds(true);
+    banana.anims.play("bananabanana", true);
+    banana.setAngle(Phaser.Math.Between(0, 360));
+    banana.setVelocityY(-900);
+    player.canFire = false;
+    this.time.addEvent({
+      delay: 500,
+      callback: () => (player.canFire = true),
+    });
   }
 
   // PLAYER ALWAYS MOVES
