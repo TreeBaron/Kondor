@@ -34,7 +34,7 @@ const App: React.FC = () => {
     <>
       <div className={styles.blackBackground}>
         <div className={`${styles.sovietFont} ${styles.centerText}`}>
-          SPACEPOSTING
+          KOLONY TRANSPORT INCORPORATED
         </div>
         <div
           id={`phaser-game-container`}
