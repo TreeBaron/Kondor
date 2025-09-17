@@ -2,12 +2,9 @@ import { inXSeconds } from "./Helper.ts";
 import { Level } from "./LevelClass.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 
-const cameraOffsetY = 280;
-const playerSpeed = 250.0;
+const cameraOffsetY = 0;
 const worldThirdOfWidth = 920;
 const worldHeight = 1000 * 35;
-const playerSpeedLeftAndRight = 500;
-const playerSpeedForward = 250;
 const starSpeed1 = -1.5;
 const starSpeed2 = -0.5;
 const starsToAdd = 100;
@@ -16,8 +13,6 @@ const movingStarsToAdd2 = 200;
 
 let player;
 let staticStars: Phaser.GameObjects.Image[] = [];
-let movingStars1: Phaser.GameObjects.Image[] = [];
-let movingStars2: Phaser.GameObjects.Image[] = [];
 let needsUpdateCall: any[] = [];
 let messages: TextDisplay[] = [];
 
@@ -65,24 +60,31 @@ function preload() {
 
   this.load.image("star", "assets/bluestar.png");
 
-  // ANIMATIONS
-  this.load.spritesheet("player", "assets/planes_08A.png", {
-    frameWidth: 96,
-    frameHeight: 96,
-    endFrame: 19,
-  });
+  this.load.image("player", "assets/player.png");
+  this.load.image("playerflame", "assets/playerflame.png");
+  this.load.image("playerbullet", "assets/playerbullet.png");
 
-  this.load.spritesheet("banana", "assets/spinningbanana.png", {
-    frameWidth: 50,
-    frameHeight: 25,
-    endFrame: 9,
-  });
-
-  // CHARACTERS
-  this.load.image("nensi", "assets/Nensi_B.png");
-  this.load.image("anya", "assets/Anya_B.png");
-  this.load.image("dimitri", "assets/Dimitri_B.png");
-  this.load.image("alexi", "assets/Alexi_B.png");
+  this.load.image("ammotown", "assets/ammotown.png");
+  this.load.image("asteroid1", "assets/asteroid1.png");
+  this.load.image("asteroid2", "assets/asteroid2.png");
+  this.load.image("asteroid3", "assets/asteroid3.png");
+  this.load.image("cargoammo", "assets/cargoammo.png");
+  this.load.image("cargofuel", "assets/cargopeople.png");
+  this.load.image("earthplanet", "assets/earthplanet.png");
+  this.load.image("enemy", "assets/enemy.png");
+  this.load.image("enemybullet", "assets/enemybullet.png");
+  this.load.image("enemyflame", "assets/enemyflame.png");
+  this.load.image("gasplanet", "assets/gasplanet.png");
+  this.load.image("gastown", "assets/gastown.png");
+  this.load.image("land1platform", "assets/land1platform.png");
+  this.load.image("land2platform", "assets/land2platform.png");
+  this.load.image("land3platform", "assets/land3platform.png");
+  this.load.image("landingpad", "assets/landingpad.png");
+  this.load.image("peopletown", "assets/peopletown.png");
+  this.load.image("rawland1", "assets/rawland1.png");
+  this.load.image("rawland2", "assets/rawland2.png");
+  this.load.image("rawland3", "assets/rawland3.png");
+  this.load.image("ringplanet", "assets/ringplanet.png");
 
   // Friends lol
   this.load.image("andrew", "assets/andrew.png");
@@ -123,32 +125,7 @@ function create() {
   );
 
   // PLAYER SETUP
-  this.anims.create({
-    key: "bananabanana",
-    frames: this.anims.generateFrameNumbers("banana", {
-      start: 0,
-      end: 9,
-      repeat: -1,
-    }),
-    frameRate: 10,
-  });
-  this.anims.create({
-    key: "right",
-    frames: this.anims.generateFrameNumbers("player", {
-      start: 12,
-      end: 15,
-    }),
-    frameRate: 10,
-  });
-
-  this.anims.create({
-    key: "left",
-    frames: this.anims.generateFrameNumbers("player", {
-      start: 4,
-      end: 7,
-    }),
-    frameRate: 10,
-  });
+  /*
   this.anims.create({
     key: "straight",
     frames: this.anims.generateFrameNumbers("player", {
@@ -158,17 +135,42 @@ function create() {
     frameRate: 10,
     repeat: -1,
   });
+  */
   const worldStartCoordX = cameraViewWidth / 2;
   const worldStartCoordY = cameraViewHeight / 2 + cameraOffsetY;
-  player = this.physics.add.sprite(
-    worldStartCoordX,
-    worldStartCoordY,
-    "player"
-  );
+  player = this.physics.add
+    .sprite(worldStartCoordX, worldStartCoordY, "player")
+    .setScale(0.25);
   player.setBounce(0.2);
   player.setCollideWorldBounds(true);
-  player.anims.play("straight", true);
   player.canFire = true;
+  player.turnRate = 4;
+  player.speed = 2.5;
+  player.body.setDamping(true);
+  player.body.setDrag(0.999);
+  player.body.setMaxVelocity(450);
+
+  // PLAYER SMOKE EMITTER
+  this.emitter = this.add.particles(0, 0, "star", {
+    speed: { min: -200, max: -100 },
+    angle: { min: 170, max: 190 },
+    lifespan: 300,
+    quantity: 2,
+    scale: { start: 0.3, end: 0 },
+    alpha: { start: 0, end: 1.0 },
+    emitting: false,
+  });
+  this.emitter.onParticleEmit((particle) => {
+    const angleOffset = -90 - 180;
+    let angleInDegrees = player.angle + angleOffset; // Or set it based on input
+    let velocity = this.physics.velocityFromAngle(
+      angleInDegrees,
+      player.speed * 500
+    );
+    particle.velocityX = velocity.x + Phaser.Math.Between(-200, 200);
+    particle.velocityY = velocity.y + Phaser.Math.Between(-200, 200);
+  });
+  this.emitter.startFollow(player);
 
   // CAMERA FOLLOWS PLAYER
   this.cameras.main.startFollow(player);
@@ -182,20 +184,15 @@ function create() {
     let star = this.add.image(x, y, "star").setScale(0.05);
     staticStars.push(star);
   }
-  for (let i = 0; i < movingStarsToAdd1; i++) {
-    const x = Phaser.Math.Between(0 - cameraViewWidth * 2, cameraViewWidth * 3);
-    const y = Phaser.Math.Between(0, cameraViewHeight + cameraOffsetY);
-    let star = this.add.image(x, y, "star").setScale(0.05);
-    movingStars1.push(star);
-  }
-  for (let i = 0; i < movingStarsToAdd2; i++) {
-    const x = Phaser.Math.Between(0 - cameraViewWidth * 2, cameraViewWidth * 3);
-    const y = Phaser.Math.Between(0, cameraViewHeight + cameraOffsetY);
-    let star = this.add.image(x, y, "star").setScale(0.05);
-    movingStars2.push(star);
-  }
 
   // SETUP MESSAGES
+
+  say("walter", "Hello there.", 1, this);
+  say("walter", "I am Amaguma.", 1, this);
+  say("john", "I see...", 1, this);
+  say("walter", "Bush did 9/11", 1, this);
+  say("john", "WHAT!??", 1, this);
+  /*
   say(
     "andrew",
     "John I'm sick of your shitposts,\nI'm deleting the shitposting channel",
@@ -246,10 +243,8 @@ function create() {
   );
   say("jd", "It's morbin time.", 1, this);
   say("walter", "Look out!", 1, this);
+  */
 
-  //say("nensi", "Hello there.", 3, this);
-  //say("anya", "General Kenobi.", 3, this);
-  //say("anya", "General Kenobi", 15, this);
   initializeMessagesChain();
 }
 
@@ -259,33 +254,39 @@ function update() {
 
   // LEFT AND RIGHT
   if (cursors.left.isDown || keyA.isDown) {
-    player.setVelocityX(-1 * playerSpeedLeftAndRight);
-    player.anims.play("left", true);
+    player.setAngle(player.angle - player.turnRate);
   } else if (cursors.right.isDown || keyD.isDown) {
-    player.setVelocityX(playerSpeedLeftAndRight);
-    player.anims.play("right", true);
-  } else {
-    player.setVelocityX(0);
-    player.anims.play("straight", true);
+    player.setAngle(player.angle + player.turnRate);
   }
 
   // UP AND DOWN
   if (cursors.up.isDown || keyW.isDown) {
-    player.setVelocityY(-1 * playerSpeedForward);
-  } else if (cursors.down.isDown || keyS.isDown) {
-    player.setVelocityY(0);
+    const angleOffset = -90;
+    let angleInDegrees = player.angle + angleOffset; // Or set it based on input
+    let velocity = this.physics.velocityFromAngle(angleInDegrees, player.speed);
+    player.body.setVelocity(
+      player.body.velocity.x + velocity.x,
+      player.body.velocity.y + velocity.y
+    );
+    this.emitter.emitting = true;
+    player.setTexture("playerflame");
   } else {
-    player.setVelocityY(0);
+    player.setTexture("player");
+    this.emitter.emitting = false;
+    player.setAcceleration(0); // needed
   }
 
   // SHOOTING
   if (keySpace.isDown && player.canFire) {
-    let banana = this.physics.add.sprite(player.x, player.y - 50, "banana");
-    banana.setBounce(1.0);
-    banana.setCollideWorldBounds(true);
-    banana.anims.play("bananabanana", true);
-    banana.setAngle(Phaser.Math.Between(0, 360));
-    banana.setVelocityY(-900);
+    let bullet = this.physics.add.sprite(
+      player.x,
+      player.y - 50,
+      "playerbullet"
+    );
+    bullet.setBounce(1.0);
+    bullet.setCollideWorldBounds(true);
+    bullet.setAngle(Phaser.Math.Between(0, 360));
+    bullet.setVelocityY(-900);
     player.canFire = false;
     this.time.addEvent({
       delay: 500,
@@ -293,28 +294,21 @@ function update() {
     });
   }
 
-  // PLAYER ALWAYS MOVES
-  player.setVelocityY(player.body.velocity.y - playerSpeed);
-
   // STAR REFRESHING
-  const allStars: Phaser.GameObjects.Image[] = [
-    ...staticStars,
-    ...movingStars1,
-    ...movingStars2,
-  ];
+  const allStars: Phaser.GameObjects.Image[] = [...staticStars];
   allStars.forEach((star: Phaser.GameObjects.Image) => {
-    if (
-      star.getBounds().y - star.getBounds().height >
-      this.cameras.main.worldView.bottom
-    ) {
-      star.setPosition(star.x, star.y - this.cameras.main.worldView.height);
+    const bounds = star.getBounds();
+    const cam = this.cameras.main.worldView;
+    if (bounds.top > cam.bottom) {
+      star.setY(star.y - cam.height);
+    } else if (bounds.bottom < cam.top) {
+      star.setY(star.y + cam.height);
     }
-  });
-  movingStars1.forEach((star: Phaser.GameObjects.Image) => {
-    star.setPosition(star.x, star.y - starSpeed1);
-  });
-  movingStars2.forEach((star: Phaser.GameObjects.Image) => {
-    star.setPosition(star.x, star.y - starSpeed2);
+    if (bounds.left > cam.right) {
+      star.setX(star.x - cam.width);
+    } else if (bounds.right < cam.left) {
+      star.setX(star.x + cam.width);
+    }
   });
 
   // EVERYTHING ELSE
@@ -337,7 +331,7 @@ function initializeMessagesChain() {
 
 export function getLevel1(): Level {
   const value = {
-    name: "Revolt in Pod 7",
+    name: "Sea Legs",
     preload: preload,
     create: create,
     update: update,
