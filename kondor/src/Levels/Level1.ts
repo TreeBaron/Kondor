@@ -259,8 +259,8 @@ function create() {
     (player, planet) => {
       if (pixelPerfectCheck(player, planet, this.ctx)) {
         player.body.velocity.negate();
-        player.body.position.x += player.body.velocity.x;
-        player.body.position.y += player.body.velocity.y;
+        player.body.position.x += player.body.velocity.x * 0.05;
+        player.body.position.y += player.body.velocity.y * 0.05;
       }
     },
     null,
