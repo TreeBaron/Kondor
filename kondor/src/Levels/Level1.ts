@@ -1,15 +1,10 @@
-import { inXSeconds } from "./Helper.ts";
+import { inXSeconds, pixelPerfectCheck } from "./Helper.ts";
 import { Level } from "./LevelClass.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 
-const cameraOffsetY = 0;
-const worldThirdOfWidth = 920;
 const worldHeight = 1000 * 35;
-const starSpeed1 = -1.5;
-const starSpeed2 = -0.5;
+const worldWidth = 1000 * 35;
 const starsToAdd = 100;
-const movingStarsToAdd1 = 250;
-const movingStarsToAdd2 = 200;
 
 let player;
 let staticStars: Phaser.GameObjects.Image[] = [];
@@ -49,8 +44,9 @@ function getConfig(): Partial<Phaser.Types.Core.GameConfig> {
         gravity: { x: 0, y: 0 },
       },
     },
-    roundPixels: true,
-    pixelArt: true,
+    roundPixels: false,
+    pixelArt: false,
+    antialias: false,
   };
 }
 
@@ -100,6 +96,22 @@ function preload() {
 function create() {
   console.log("create() started.");
 
+  // COLLISION DETECTION CANVAS
+  this.collisionCanvas = document.createElement("canvas");
+  this.collisionCanvas.width = 256;
+  this.collisionCanvas.height = 256;
+  this.ctx = this.collisionCanvas.getContext("2d");
+
+  /*
+  // DEBUG: append the canvas element (not the ctx!)
+  document.body.appendChild(this.collisionCanvas);
+
+  this.collisionCanvas.style.position = "absolute";
+  this.collisionCanvas.style.top = "0";
+  this.collisionCanvas.style.left = "0";
+  this.collisionCanvas.style.border = "1px solid red";
+  */
+
   // KEYS
   keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
   keyS = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.S);
@@ -114,9 +126,9 @@ function create() {
 
   // WORLD BOUNDS SETUP
   this.physics.world.setBounds(
-    0 - worldThirdOfWidth,
-    0 - worldHeight,
-    worldThirdOfWidth * 2,
+    0 - worldWidth / 2,
+    0 - worldHeight / 2,
+    worldWidth,
     worldHeight,
     true,
     true,
@@ -125,35 +137,25 @@ function create() {
   );
 
   // PLAYER SETUP
-  /*
-  this.anims.create({
-    key: "straight",
-    frames: this.anims.generateFrameNumbers("player", {
-      start: 0,
-      end: 3,
-    }),
-    frameRate: 10,
-    repeat: -1,
-  });
-  */
   const worldStartCoordX = cameraViewWidth / 2;
-  const worldStartCoordY = cameraViewHeight / 2 + cameraOffsetY;
-  player = this.physics.add
+  const worldStartCoordY = cameraViewHeight / 2;
+  this.player = this.physics.add
     .sprite(worldStartCoordX, worldStartCoordY, "player")
-    .setScale(0.25);
-  player.setBounce(0.2);
-  player.setCollideWorldBounds(true);
-  player.canFire = true;
-  player.turnRate = 4;
-  player.speed = 2.5;
-  player.body.setDamping(true);
-  player.body.setDrag(0.999);
-  player.body.setMaxVelocity(450);
+    .setScale(0.15);
+  this.player.setBounce(0.2);
+  this.player.setCollideWorldBounds(true);
+  this.player.canFire = true;
+  this.player.turnRate = 4;
+  this.player.speed = 2.5;
+  this.player.body.setDamping(true);
+  this.player.body.setDrag(0.999);
+  this.player.body.setMaxVelocity(450);
+  this.player.setAngle(-90);
 
   // PLAYER SMOKE EMITTER
   this.emitter = this.add.particles(0, 0, "star", {
     speed: { min: -200, max: -100 },
-    angle: { min: 170, max: 190 },
+    //angle: { min: 170, max: 190 },
     lifespan: 300,
     quantity: 2,
     scale: { start: 0.3, end: 0 },
@@ -161,26 +163,24 @@ function create() {
     emitting: false,
   });
   this.emitter.onParticleEmit((particle) => {
-    const angleOffset = -90 - 180;
-    let angleInDegrees = player.angle + angleOffset; // Or set it based on input
+    const angleOffset = -180;
+    let angleInDegrees =
+      this.player.angle + angleOffset + Phaser.Math.Between(-7, 7); // Or set it based on input
     let velocity = this.physics.velocityFromAngle(
       angleInDegrees,
-      player.speed * 500
+      this.player.speed * 500
     );
-    particle.velocityX = velocity.x + Phaser.Math.Between(-200, 200);
-    particle.velocityY = velocity.y + Phaser.Math.Between(-200, 200);
+    particle.velocityX = velocity.x; //+ Phaser.Math.Between(-200, 200);
+    particle.velocityY = velocity.y; // + Phaser.Math.Between(-200, 200);
   });
-  this.emitter.startFollow(player);
+  this.emitter.startFollow(this.player);
 
   // CAMERA FOLLOWS PLAYER
-  this.cameras.main.startFollow(player);
-  this.cameras.main.setFollowOffset(0, cameraOffsetY);
-  //this.cameras.main.setLerp({0.1, 0.1});
-
+  this.cameras.main.startFollow(this.player);
   // CREATE STARS
   for (let i = 0; i < starsToAdd; i++) {
     const x = Phaser.Math.Between(0 - cameraViewWidth * 2, cameraViewWidth * 3);
-    const y = Phaser.Math.Between(0, cameraViewHeight + cameraOffsetY);
+    const y = Phaser.Math.Between(0, cameraViewHeight);
     let star = this.add.image(x, y, "star").setScale(0.05);
     staticStars.push(star);
   }
@@ -189,9 +189,7 @@ function create() {
 
   say("walter", "Hello there.", 1, this);
   say("walter", "I am Amaguma.", 1, this);
-  say("john", "I see...", 1, this);
-  say("walter", "Bush did 9/11", 1, this);
-  say("john", "WHAT!??", 1, this);
+  say("john", "Howdy.", 1, this);
   /*
   say(
     "andrew",
@@ -246,6 +244,28 @@ function create() {
   */
 
   initializeMessagesChain();
+
+  // SETUP PLANETS
+  this.planets = this.physics.add.staticGroup();
+
+  this.planets.create(400, 568, "asteroid1").setScale(2).refreshBody();
+  this.planets.create(600, 400, "asteroid2");
+  this.planets.create(50, 250, "asteroid3");
+  this.planets.create(750, 220, "asteroid2");
+  //this.physics.add.collider(this.player, this.planets);
+  this.physics.add.overlap(
+    this.player,
+    this.planets,
+    (player, planet) => {
+      if (pixelPerfectCheck(player, planet, this.ctx)) {
+        player.body.velocity.negate();
+        player.body.position.x += player.body.velocity.x;
+        player.body.position.y += player.body.velocity.y;
+      }
+    },
+    null,
+    this
+  );
 }
 
 function update() {
@@ -254,43 +274,58 @@ function update() {
 
   // LEFT AND RIGHT
   if (cursors.left.isDown || keyA.isDown) {
-    player.setAngle(player.angle - player.turnRate);
+    this.player.setAngle(this.player.angle - this.player.turnRate);
   } else if (cursors.right.isDown || keyD.isDown) {
-    player.setAngle(player.angle + player.turnRate);
+    this.player.setAngle(this.player.angle + this.player.turnRate);
   }
 
   // UP AND DOWN
   if (cursors.up.isDown || keyW.isDown) {
-    const angleOffset = -90;
-    let angleInDegrees = player.angle + angleOffset; // Or set it based on input
-    let velocity = this.physics.velocityFromAngle(angleInDegrees, player.speed);
-    player.body.setVelocity(
-      player.body.velocity.x + velocity.x,
-      player.body.velocity.y + velocity.y
+    let angleInDegrees = this.player.angle; // Or set it based on input
+    let velocity = this.physics.velocityFromAngle(
+      angleInDegrees,
+      this.player.speed
+    );
+    this.player.body.setVelocity(
+      this.player.body.velocity.x + velocity.x,
+      this.player.body.velocity.y + velocity.y
     );
     this.emitter.emitting = true;
-    player.setTexture("playerflame");
+    this.player.setTexture("playerflame");
   } else {
-    player.setTexture("player");
+    this.player.setTexture("player");
     this.emitter.emitting = false;
-    player.setAcceleration(0); // needed
+    this.player.setAcceleration(0); // needed
   }
 
   // SHOOTING
-  if (keySpace.isDown && player.canFire) {
-    let bullet = this.physics.add.sprite(
-      player.x,
-      player.y - 50,
-      "playerbullet"
-    );
-    bullet.setBounce(1.0);
+  if (keySpace.isDown && this.player.canFire) {
+    let bullet = this.physics.add
+      .sprite(this.player.x, this.player.y, "playerbullet")
+      .setScale(0.25);
+    bullet.setBounce(0.0);
     bullet.setCollideWorldBounds(true);
-    bullet.setAngle(Phaser.Math.Between(0, 360));
-    bullet.setVelocityY(-900);
-    player.canFire = false;
+    bullet.setAngle(this.player.angle);
+    bullet.body.velocity = this.physics.velocityFromAngle(
+      this.player.angle,
+      700
+    );
+    bullet.body.setVelocity(
+      this.player.body.velocity.x + bullet.body.velocity.x,
+      this.player.body.velocity.y + bullet.body.velocity.y
+    );
+    this.player.canFire = false;
     this.time.addEvent({
       delay: 500,
-      callback: () => (player.canFire = true),
+      callback: () => {
+        this.player.canFire = true;
+      },
+    });
+    this.time.addEvent({
+      delay: 1500,
+      callback: () => {
+        bullet.destroy();
+      },
     });
   }
 
