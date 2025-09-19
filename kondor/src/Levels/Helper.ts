@@ -90,3 +90,81 @@ export function pixelPerfectCheck(spriteA, spriteB, ctx, alphaThreshold = 1) {
 
   return false;
 }
+
+export function createAsteroid(
+  level: any,
+  x: number,
+  y: number,
+  scale: number
+) {
+  const sprites = ["asteroid1", "asteroid2", "asteroid3"];
+  let asteroid = level.asteroids.create(
+    x,
+    y,
+    sprites[Phaser.Math.Between(0, 2)]
+  );
+  asteroid.setScale(scale);
+  asteroid.setBounce(1.0);
+  asteroid.setCollideWorldBounds(true);
+
+  // circular collision
+  const origWidth = asteroid.width;
+  const origHeight = asteroid.height;
+  const radius = Math.min(origWidth, origHeight) / 2;
+  const offsetX = origWidth / 2 - radius;
+  const offsetY = origHeight / 2 - radius;
+  asteroid.body.setCircle(radius, offsetX, offsetY);
+  const velocityX = Phaser.Math.Between(-200, 200);
+  const velocityY = Phaser.Math.Between(-200, 200);
+  asteroid.setVelocity(velocityX, velocityY);
+
+  return asteroid;
+}
+
+export function getRandomPlanetName() {
+  const first = [
+    "Mel",
+    "Ea",
+    "Terr",
+    "Drea",
+    "Bur",
+    "Chrono",
+    "Ven",
+    "Din",
+    "Bin",
+  ];
+  const second = ["den", "ria", "th", "ting", "king", "d", "r"];
+  const third = [
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "2",
+    "",
+    " I",
+    " II",
+    " II",
+    " Suprema",
+    " Theta",
+    " Gamma",
+    " Tetra",
+  ];
+
+  const parts = Phaser.Math.Between(1, 3);
+  let name = first[Phaser.Math.Between(0, first.length - 1)];
+  if (parts > 1) {
+    name += second[Phaser.Math.Between(0, second.length - 1)];
+  }
+
+  if (parts > 2) {
+    name += third[Phaser.Math.Between(0, third.length - 1)];
+  }
+
+  return name;
+}

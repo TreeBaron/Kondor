@@ -1,10 +1,17 @@
-import { inXSeconds, pixelPerfectCheck } from "./Helper.ts";
+import {
+  createAsteroid,
+  inXSeconds,
+  pixelPerfectCheck,
+  getRandomPlanetName,
+} from "./Helper.ts";
 import { Level } from "./LevelClass.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 
-const worldHeight = 1000 * 35;
-const worldWidth = 1000 * 35;
+const worldHeight = 1000 * 12;
+const worldWidth = 1000 * 12;
 const starsToAdd = 100;
+const gravityDistance = 1500;
+const gravityStrength = 4;
 
 let player;
 let staticStars: Phaser.GameObjects.Image[] = [];
@@ -96,6 +103,8 @@ function preload() {
 function create() {
   console.log("create() started.");
 
+  this.graphics = this.add.graphics();
+
   // COLLISION DETECTION CANVAS
   this.collisionCanvas = document.createElement("canvas");
   this.collisionCanvas.width = 256;
@@ -147,9 +156,9 @@ function create() {
   this.player.canFire = true;
   this.player.turnRate = 4;
   this.player.speed = 2.5;
-  this.player.body.setDamping(true);
-  this.player.body.setDrag(0.999);
-  this.player.body.setMaxVelocity(450);
+  this.player.setDamping(true);
+  this.player.setDrag(0.999);
+  this.player.setMaxVelocity(450);
   this.player.setAngle(-90);
 
   // PLAYER SMOKE EMITTER
@@ -245,22 +254,91 @@ function create() {
 
   initializeMessagesChain();
 
-  // SETUP PLANETS
-  this.planets = this.physics.add.staticGroup();
+  //console.log(this.asteroids.length);
+  //this.physics.world.createDebugGraphic();
 
-  this.planets.create(400, 568, "asteroid1").setScale(2).refreshBody();
-  this.planets.create(600, 400, "asteroid2");
-  this.planets.create(50, 250, "asteroid3");
-  this.planets.create(750, 220, "asteroid2");
-  //this.physics.add.collider(this.player, this.planets);
+  this.planets = this.physics.add.staticGroup();
+  this.bullets = this.physics.add.group();
+  this.asteroids = this.physics.add.group();
+
+  // SETUP ASTEROIDS
+  for (let i = 0; i < 100; i++) {
+    let asteroid = createAsteroid(
+      this,
+      Phaser.Math.Between(-0.5 * worldWidth, 0.5 * worldWidth),
+      Phaser.Math.Between(-0.5 * worldHeight, 0.5 * worldHeight),
+      Phaser.Math.Between(3, 10) * 0.1
+    );
+  }
+
+  // SETUP PLANETS
+  let planetsSpawned: any[] = [];
+  const amount = 10;
+  for (let x = 1; x < amount; x++) {
+    const spawnX = (worldWidth / amount) * x - worldWidth * 0.5;
+    const spawnY = Phaser.Math.Between(-0.3 * worldHeight, worldHeight * 0.3);
+    const sprites = ["earthplanet", "ringplanet", "gasplanet"];
+    const spriteSelect = sprites[Phaser.Math.Between(0, 2)];
+    let planet = this.planets.create(spawnX, spawnY, spriteSelect);
+    planet.setScale(0.1 * Phaser.Math.Between(5, 15));
+    planetsSpawned.push(planet);
+    if (planetsSpawned.length > 1) {
+      let previousPlanet = planetsSpawned[planetsSpawned.length - 2];
+      const line = this.add.line(
+        0,
+        0,
+        previousPlanet.x,
+        previousPlanet.y,
+        planet.x,
+        planet.y,
+        0xffffff
+      );
+      line.setOrigin(0, 0);
+    }
+    const planetName = getRandomPlanetName();
+    const text = this.add.text(
+      planet.x,
+      planet.y + planet.displayHeight / 2 + 5,
+      planetName,
+      { font: "16px Arial", color: "#ffffff" }
+    );
+    text.setOrigin(0.5, 0);
+  }
+
+  this.physics.add.collider(this.asteroids, this.asteroids);
+
+  this.physics.add.collider(
+    this.bullets,
+    this.asteroids,
+    (bullet, asteroid) => {
+      if (asteroid.scale >= 0.5) {
+        let smallAsteroid1 = createAsteroid(
+          this,
+          asteroid.x,
+          asteroid.y,
+          asteroid.scale / 3
+        );
+        let smallAsteroid2 = createAsteroid(
+          this,
+          asteroid.x,
+          asteroid.y,
+          asteroid.scale / 3
+        );
+      }
+
+      bullet.destroy();
+      asteroid.destroy();
+    }
+  );
+
   this.physics.add.overlap(
     this.player,
-    this.planets,
-    (player, planet) => {
-      if (pixelPerfectCheck(player, planet, this.ctx)) {
+    this.asteroids,
+    (player, asteroid) => {
+      if (pixelPerfectCheck(player, asteroid, this.ctx)) {
         player.body.velocity.negate();
-        player.body.position.x += player.body.velocity.x * 0.05;
-        player.body.position.y += player.body.velocity.y * 0.05;
+        player.x += player.body.velocity.x * 0.05;
+        player.y += player.body.velocity.y * 0.05;
       }
     },
     null,
@@ -300,19 +378,16 @@ function update() {
 
   // SHOOTING
   if (keySpace.isDown && this.player.canFire) {
-    let bullet = this.physics.add
-      .sprite(this.player.x, this.player.y, "playerbullet")
+    let bullet = this.bullets
+      .create(this.player.x, this.player.y, "playerbullet")
       .setScale(0.25);
     bullet.setBounce(0.0);
     bullet.setCollideWorldBounds(true);
     bullet.setAngle(this.player.angle);
-    bullet.body.velocity = this.physics.velocityFromAngle(
-      this.player.angle,
-      700
-    );
+    bullet.velocity = this.physics.velocityFromAngle(this.player.angle, 700);
     bullet.body.setVelocity(
-      this.player.body.velocity.x + bullet.body.velocity.x,
-      this.player.body.velocity.y + bullet.body.velocity.y
+      this.player.body.velocity.x + bullet.velocity.x,
+      this.player.body.velocity.y + bullet.velocity.y
     );
     this.player.canFire = false;
     this.time.addEvent({
@@ -328,6 +403,42 @@ function update() {
       },
     });
   }
+
+  // GRAVITY
+  this.graphics.clear();
+  this.planets.children.iterate((planet: any) => {
+    const distance = Phaser.Math.Distance.Between(
+      this.player.x,
+      this.player.y,
+      planet.x,
+      planet.y
+    );
+
+    if (distance < gravityDistance) {
+      this.graphics.lineStyle(2, 0xff0000, 1);
+      this.graphics.beginPath();
+      this.graphics.moveTo(planet.x, planet.y);
+      this.graphics.lineTo(this.player.x, this.player.y);
+      this.graphics.strokePath();
+
+      let angleToPlanet = Phaser.Math.RadToDeg(
+        Phaser.Math.Angle.Between(
+          this.player.x,
+          this.player.y,
+          planet.x,
+          planet.y
+        )
+      );
+      let gravVel = this.physics.velocityFromAngle(
+        angleToPlanet,
+        gravityStrength * (1 - distance / gravityDistance)
+      );
+      this.player.body.setVelocity(
+        gravVel.x + this.player.body.velocity.x,
+        gravVel.y + this.player.body.velocity.y
+      );
+    }
+  });
 
   // STAR REFRESHING
   const allStars: Phaser.GameObjects.Image[] = [...staticStars];
