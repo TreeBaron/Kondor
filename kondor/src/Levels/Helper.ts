@@ -1,3 +1,5 @@
+import { Player } from "../GameObjects/player.ts";
+
 export function inXSeconds(seconds: number) {
   let d = new Date();
   d.setSeconds(d.getSeconds() + seconds);
@@ -172,25 +174,4 @@ export function getRandomPlanetName() {
   }
 
   return name;
-}
-
-export function getPlayerSpaceZone(
-  level: any,
-  worldStartCoordX: number,
-  worldStartCoordY: number
-): Player {
-  const player = level.physics.add
-    .sprite(worldStartCoordX, worldStartCoordY, "player")
-    .setScale(0.15);
-  player.setBounce(0.2);
-  player.setCollideWorldBounds(true);
-  player.canFire = true;
-  player.turnRate = 4;
-  player.speed = 2.5;
-  player.setDamping(true);
-  player.setDrag(0.999);
-  player.setMaxVelocity(450);
-  player.setAngle(-90);
-
-  return player;
 }

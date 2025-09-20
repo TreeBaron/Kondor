@@ -1,13 +1,12 @@
 import {
   createAsteroid,
-  inXSeconds,
   pixelPerfectCheck,
   getRandomPlanetName,
-  getPlayerSpaceZone,
 } from "./Helper.ts";
 import { TextDisplay } from "./TextDisplay.ts";
+import { Player } from "../GameObjects/player.ts";
 
-class Level1 extends Phaser.Scene {
+export class Level1 extends Phaser.Scene {
   // World Definition fields
   worldWidth: number = 12_000;
   worldHeight: number = 12_000;
@@ -93,16 +92,6 @@ class Level1 extends Phaser.Scene {
       "2d"
     ) as CanvasRenderingContext2D;
 
-    /*
-  // DEBUG: append the canvas element (not the ctx!)
-  document.body.appendChild(this.collisionCanvas);
-
-  this.collisionCanvas.style.position = "absolute";
-  this.collisionCanvas.style.top = "0";
-  this.collisionCanvas.style.left = "0";
-  this.collisionCanvas.style.border = "1px solid red";
-  */
-
     // KEYS
     const inputManager = this.input as Phaser.Input.InputPlugin;
     const keyboard =
@@ -133,7 +122,7 @@ class Level1 extends Phaser.Scene {
     // PLAYER SETUP
     const worldStartCoordX = cameraViewWidth / 2;
     const worldStartCoordY = cameraViewHeight / 2;
-    this.player = getPlayerSpaceZone(this, worldStartCoordX, worldStartCoordY);
+    this.player = new Player(this, worldStartCoordX, worldStartCoordY);
 
     // PLAYER SMOKE EMITTER
     this.emitter = this.add.particles(0, 0, "star", {
@@ -277,66 +266,8 @@ class Level1 extends Phaser.Scene {
   update(time: number, delta: number): void {
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
 
-    // PLAYER CONTROLS
-    const inputManager = this.input as Phaser.Input.InputPlugin;
-    const keyboard =
-      inputManager.keyboard as Phaser.Input.Keyboard.KeyboardPlugin;
-    let cursors = keyboard.createCursorKeys();
-
-    // LEFT AND RIGHT
-    if (cursors.left.isDown || this.keyA.isDown) {
-      this.player.setAngle(this.player.angle - this.player.turnRate);
-    } else if (cursors.right.isDown || this.keyD.isDown) {
-      this.player.setAngle(this.player.angle + this.player.turnRate);
-    }
-
-    // UP AND DOWN
-    if (cursors.up.isDown || this.keyW.isDown) {
-      let angleInDegrees = this.player.angle; // Or set it based on input
-      let velocity = this.physics.velocityFromAngle(
-        angleInDegrees,
-        this.player.speed
-      );
-
-      playerBody.setVelocity(
-        playerBody.velocity.x + velocity.x,
-        playerBody.velocity.y + velocity.y
-      );
-      this.emitter.emitting = true;
-      this.player.setTexture("playerflame");
-    } else {
-      this.player.setTexture("player");
-      this.emitter.emitting = false;
-      this.player.setAcceleration(0); // needed
-    }
-
-    // SHOOTING
-    if (this.keySpace.isDown && this.player.canFire) {
-      let bullet = this.bullets
-        .create(this.player.x, this.player.y, "playerbullet")
-        .setScale(0.25);
-      bullet.setBounce(0.0);
-      bullet.setCollideWorldBounds(true);
-      bullet.setAngle(this.player.angle);
-      bullet.velocity = this.physics.velocityFromAngle(this.player.angle, 700);
-      bullet.body.setVelocity(
-        playerBody.velocity.x + bullet.velocity.x,
-        playerBody.velocity.y + bullet.velocity.y
-      );
-      this.player.canFire = false;
-      this.time.addEvent({
-        delay: 500,
-        callback: () => {
-          this.player.canFire = true;
-        },
-      });
-      this.time.addEvent({
-        delay: 1500,
-        callback: () => {
-          bullet.destroy();
-        },
-      });
-    }
+    // UPDATE PLAYER
+    this.player.customLogic(this);
 
     // GRAVITY
     this.graphics.clear();

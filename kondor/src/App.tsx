@@ -1,48 +1,64 @@
 import React, { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import styles from "./App.module.css";
-import { getLevel1 } from "./Levels/Level1.ts";
+import { Level1 } from "./Levels/Level1.ts";
 
 const App: React.FC = () => {
-  const phaserGameRef: any = useRef(null);
-  const gameInstanceRef: any = useRef(null);
+  const phaserGameRef = useRef<Phaser.Game | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const allLevels: any = [getLevel1()];
-    let levelIndex = 0;
+    if (!phaserGameRef.current && containerRef.current) {
+      const config: Phaser.Types.Core.GameConfig = {
+        type: Phaser.AUTO,
+        parent: "phaser-game-container",
+        scene: [Level1],
+        min: {
+          width: 920,
+          height: 720,
+        },
+        max: {
+          width: 920,
+          height: 720,
+        },
+        scale: {
+          mode: Phaser.Scale.FIT,
+          autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+        physics: {
+          default: "arcade",
+          arcade: {
+            gravity: { x: 0, y: 0 },
+          },
+        },
+        roundPixels: false,
+        pixelArt: false,
+        antialias: false,
+      };
 
-    // Check if the Phaser script has loaded and if a game instance doesn't already exist
-    if (window.Phaser && phaserGameRef.current && !gameInstanceRef.current) {
-      const config = allLevels[levelIndex].getConfig();
-      //console.log(JSON.stringify(config));
-      // Create the new Phaser game instance
-      gameInstanceRef.current = new Phaser.Game(config);
+      phaserGameRef.current = new Phaser.Game(config);
     }
 
-    // --- CLEANUP LOGIC ---
-    // This function will be called when the component unmounts
+    // Cleanup when React component unmounts
     return () => {
-      if (gameInstanceRef.current) {
-        // Destroy the game instance
-        gameInstanceRef.current.destroy(true);
-        gameInstanceRef.current = null;
+      if (phaserGameRef.current) {
+        phaserGameRef.current.destroy(true);
+        phaserGameRef.current = null;
       }
     };
-  }, []); // run once
+  }, []);
 
   return (
-    <>
-      <div className={styles.blackBackground}>
-        <div className={`${styles.sovietFont} ${styles.centerText}`}>
-          KOLONY TRANSPORT INCORPORATED
-        </div>
-        <div
-          id={`phaser-game-container`}
-          ref={phaserGameRef}
-          className={styles.gameWindow}
-        />
+    <div className={styles.blackBackground}>
+      <div className={`${styles.sovietFont} ${styles.centerText}`}>
+        KOLONY TRANSPORT INCORPORATED
       </div>
-    </>
+      <div
+        id="phaser-game-container"
+        ref={containerRef}
+        className={styles.gameWindow}
+      />
+    </div>
   );
 };
 
