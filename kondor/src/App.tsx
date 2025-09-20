@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import Phaser from "phaser";
 import styles from "./App.module.css";
 import { Level1 } from "./Levels/Level1.ts";
+import { Level2 } from "./Levels/Level2.ts";
 
 const App: React.FC = () => {
   const phaserGameRef = useRef<Phaser.Game | null>(null);
@@ -12,7 +13,7 @@ const App: React.FC = () => {
       const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
         parent: "phaser-game-container",
-        scene: [Level1],
+        scene: [new Level1(), new Level2()],
         min: {
           width: 920,
           height: 720,

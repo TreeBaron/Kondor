@@ -1,7 +1,8 @@
 import { Level1 } from "../Levels/Level1.ts";
+import { Level2 } from "../Levels/Level2.ts";
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
-  speed: number = 2.5;
+  speed: number = 3.5;
   turnRate: number = 4;
   canFire: boolean = true;
 
@@ -10,7 +11,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     scene.add.existing(this);
     scene.physics.add.existing(this);
 
-    this.setScale(0.15);
+    this.setScale(0.07);
     this.setBounce(0.2);
     this.setCollideWorldBounds(true);
     this.setDamping(true);
@@ -19,7 +20,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setAngle(-90);
   }
 
-  customLogic(level: Level1): void {
+  customLogic(level: Level1 | Level2): void {
     const playerBody = level.player.body as Phaser.Physics.Arcade.Body;
 
     // PLAYER CONTROLS
