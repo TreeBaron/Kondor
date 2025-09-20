@@ -1,16 +1,21 @@
-export function inXSeconds(seconds) {
+export function inXSeconds(seconds: number) {
   let d = new Date();
   d.setSeconds(d.getSeconds() + seconds);
   return d;
 }
 
-export function inXMilliseconds(milliSeconds) {
+export function inXMilliseconds(milliSeconds: number) {
   let d = new Date();
   d.setMilliseconds(d.getMilliseconds() + milliSeconds);
   return d;
 }
 
-export function pixelPerfectCheck(spriteA, spriteB, ctx, alphaThreshold = 1) {
+export function pixelPerfectCheck(
+  spriteA: Phaser.Physics.Arcade.Sprite,
+  spriteB: Phaser.Physics.Arcade.Sprite,
+  ctx: any,
+  alphaThreshold = 1
+) {
   const boundsA = spriteA.getBounds();
   const boundsB = spriteB.getBounds();
 
@@ -34,7 +39,7 @@ export function pixelPerfectCheck(spriteA, spriteB, ctx, alphaThreshold = 1) {
   // clear canvas once
   ctx.clearRect(0, 0, w, h);
 
-  function drawSpriteIntoCanvas(spr) {
+  function drawSpriteIntoCanvas(spr: Phaser.Physics.Arcade.Sprite) {
     const frame = spr.frame;
     const srcImg = frame.source.image;
 
@@ -57,8 +62,8 @@ export function pixelPerfectCheck(spriteA, spriteB, ctx, alphaThreshold = 1) {
     ctx.rotate(tm.rotation ?? 0);
     ctx.scale(spr.flipX ? -1 : 1, spr.flipY ? -1 : 1);
 
-    const originX = spr.originX ?? spr.origin?.x ?? 0.5;
-    const originY = spr.originY ?? spr.origin?.y ?? 0.5;
+    const originX = spr.originX ?? 0.5;
+    const originY = spr.originY ?? 0.5;
 
     ctx.drawImage(
       srcImg,
@@ -167,4 +172,25 @@ export function getRandomPlanetName() {
   }
 
   return name;
+}
+
+export function getPlayerSpaceZone(
+  level: any,
+  worldStartCoordX: number,
+  worldStartCoordY: number
+): Player {
+  const player = level.physics.add
+    .sprite(worldStartCoordX, worldStartCoordY, "player")
+    .setScale(0.15);
+  player.setBounce(0.2);
+  player.setCollideWorldBounds(true);
+  player.canFire = true;
+  player.turnRate = 4;
+  player.speed = 2.5;
+  player.setDamping(true);
+  player.setDrag(0.999);
+  player.setMaxVelocity(450);
+  player.setAngle(-90);
+
+  return player;
 }

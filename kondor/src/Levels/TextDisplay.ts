@@ -6,7 +6,7 @@ export class TextDisplay {
   shouldTypeOutText: boolean = true;
   typeTextDelay: number = 50;
   textToTypeIndex: number = 0;
-  typeTextTimer: Date;
+  typeTextTimer?: Date;
   text: string = "";
   textToWrite: string = "";
   delay?: Date;
@@ -83,6 +83,7 @@ export class TextDisplay {
     if (
       this.shouldTypeOutText &&
       this.textToWrite != this.text &&
+      this.typeTextTimer &&
       new Date() > this.typeTextTimer
     ) {
       this.text += this.textToWrite[this.textToTypeIndex];
