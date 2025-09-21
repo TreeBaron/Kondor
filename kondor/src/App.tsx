@@ -13,7 +13,7 @@ const App: React.FC = () => {
       const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
         parent: "phaser-game-container",
-        scene: [new Level1(), new Level2()],
+        scene: [new Level2(), new Level1()],
         min: {
           width: 920,
           height: 720,

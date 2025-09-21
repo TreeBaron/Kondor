@@ -175,3 +175,17 @@ export function getRandomPlanetName() {
 
   return name;
 }
+
+export function getHillHeight(x: number, smoothness: number = 20.0) {
+  const f = (fNumb: number) => {
+    return Math.sin(fNumb / 55.0) * 400.0;
+  };
+  const g = (gNumb: number) => {
+    return Math.sin(gNumb / 200.0) * 1600;
+  };
+  const a = (aNumb: number) => {
+    return Math.cos(aNumb / 25.0) * 23.0;
+  };
+
+  return (f(x) + g(x) + a(x) * 4 + a(x)) / smoothness + 300.0;
+}

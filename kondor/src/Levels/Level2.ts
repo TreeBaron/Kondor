@@ -1,12 +1,13 @@
 import { createAsteroid } from "./Helper.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 import { Player } from "../GameObjects/player.ts";
+import { getHillHeight } from "./Helper.ts";
 
 export class Level2 extends Phaser.Scene {
   // World Definition fields
   worldWidth: number = 6_000;
   worldHeight: number = 6_000;
-  starsToAdd: number = 100;
+  starsToAdd: number = 900;
   gravityDistance: number = 1500;
   gravityStrength: number = 4;
   needsUpdateCall: any[] = [];
@@ -16,7 +17,8 @@ export class Level2 extends Phaser.Scene {
   player!: Player;
   bullets!: Phaser.Physics.Arcade.Group;
   asteroids!: Phaser.Physics.Arcade.Group;
-  planets!: Phaser.Physics.Arcade.StaticGroup;
+  hills: any[] = [];
+  hillColliders!: Phaser.Physics.Arcade.StaticGroup;
   emitter!: Phaser.GameObjects.Particles.ParticleEmitter;
   staticStars: Phaser.GameObjects.Image[] = [];
 
@@ -153,13 +155,73 @@ export class Level2 extends Phaser.Scene {
     // CREATE STARS
     for (let i = 0; i < this.starsToAdd; i++) {
       const x = Phaser.Math.Between(
-        0 - cameraViewWidth * 2,
-        cameraViewWidth * 3
+        this.worldWidth * -0.5,
+        this.worldWidth * 0.5
       );
-      const y = Phaser.Math.Between(0, cameraViewHeight);
-      let star = this.add.image(x, y, "star").setScale(0.05);
+      const y = Phaser.Math.Between(
+        this.worldHeight * -0.5,
+        this.worldHeight * 0.5
+      ); // don't show near ground;
+      let star = this.add.image(x, y, "star").setScale(0.1);
       this.staticStars.push(star);
     }
+
+    // CREATE LAND
+    let leftCorner = { x: this.worldWidth * -0.75, y: this.worldHeight * 0.5 };
+    let rightCorner = { x: this.worldWidth * 0.75, y: this.worldHeight * 0.5 };
+
+    /*
+    let size = (rightCorner.x - leftCorner.x) / increment + 1;
+    let heightData = new Array(size).fill(0);
+    for (let i = 0; i < heightData.length; i++) {
+      heightData[i] = Phaser.Math.Between(10, 25);
+    }
+      */
+
+    let increment = 5;
+    let heightSelect = 0;
+    for (let x = leftCorner.x; x < rightCorner.x; x += increment) {
+      let height = getHillHeight(x, 25); //+ Phaser.Math.Between(10, 30);
+      let width = increment;
+      let xVal = x;
+      let yVal = rightCorner.y;
+      this.hills.push({
+        x: xVal - width / 2,
+        y: yVal - height / 2,
+        width: width,
+        height: height,
+      });
+      heightSelect++;
+    }
+
+    this.hillColliders = this.physics.add.staticGroup(
+      //this.add.rectangle(100, 100, 200, 20).setOrigin(0, 0).setVisible(false),
+      this.hills.map((h) =>
+        this.add
+          .rectangle(h.x, h.y, h.width, h.height)
+          .setOrigin(0, 0)
+          .setVisible(true)
+      )
+    );
+
+    // Hill collisions
+    this.physics.add.collider(
+      this.staticStars,
+      this.hillColliders,
+      (star, hillCollider) => {
+        // Kill the star
+        star.destroy();
+      }
+    );
+    this.physics.add.collider(this.player, this.hillColliders);
+
+    // Below ground
+    this.hills.push({
+      x: leftCorner.x,
+      y: rightCorner.y,
+      width: this.worldWidth * 2,
+      height: 1200,
+    });
 
     // SETUP MESSAGES
     this.say("andrew", "Welcome to level 2 bitch.", 1, this);
@@ -203,7 +265,7 @@ export class Level2 extends Phaser.Scene {
     // UPDATE PLAYER
     this.player.customLogic(this);
 
-    // GRAVITY
+    // DRAW LAND
     this.graphics.clear();
 
     this.graphics.lineStyle(2, 0x0b8f04, 1);
@@ -212,21 +274,9 @@ export class Level2 extends Phaser.Scene {
     this.graphics.lineTo(this.worldWidth * 0.75, this.worldHeight * 0.5);
     this.graphics.strokePath();
 
-    // STAR REFRESHING
-    const allStars: Phaser.GameObjects.Image[] = [...this.staticStars];
-    allStars.forEach((star: Phaser.GameObjects.Image) => {
-      const bounds = star.getBounds();
-      const cam = this.cameras.main.worldView;
-      if (bounds.top > cam.bottom) {
-        star.setY(star.y - cam.height);
-      } else if (bounds.bottom < cam.top) {
-        star.setY(star.y + cam.height);
-      }
-      if (bounds.left > cam.right) {
-        star.setX(star.x - cam.width);
-      } else if (bounds.right < cam.left) {
-        star.setX(star.x + cam.width);
-      }
+    this.graphics.fillStyle(0x0b8f04, 1);
+    this.hills.forEach((hill) => {
+      this.graphics.fillRect(hill.x, hill.y, hill.width, hill.height);
     });
 
     // EVERYTHING ELSE
