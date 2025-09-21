@@ -174,10 +174,17 @@ export class Level2 extends Phaser.Scene {
       heightSelect++;
     }
 
-    // Place Landing Pad
+    // Place Landing Pad and town
+    this.add.sprite(2030, 2830, "peopletown").setScale(1.0).setDepth(-100);
     this.landingPads = this.physics.add.staticGroup([
-      this.add.sprite(2080, 2830, "landingpad").setScale(0.75).setDepth(1),
+      this.add.sprite(2160, 2830, "landingpad").setScale(0.75).setDepth(1),
     ]);
+
+    this.cameras.main.setZoom(0.5);
+
+    this.player.setX(1940);
+    this.player.setY(2500);
+
     this.physics.add.overlap(
       this.player,
       this.landingPads,
