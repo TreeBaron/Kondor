@@ -2,6 +2,7 @@ import { createAsteroid } from "./Helper.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 import { Player } from "../GameObjects/player.ts";
 import { getHillHeight } from "./Helper.ts";
+import { pixelPerfectCheck } from "./Helper.ts";
 
 export class Level2 extends Phaser.Scene {
   // World Definition fields
@@ -19,8 +20,9 @@ export class Level2 extends Phaser.Scene {
   asteroids!: Phaser.Physics.Arcade.Group;
   hills: any[] = [];
   hillColliders!: Phaser.Physics.Arcade.StaticGroup;
+  landingPads!: Phaser.Physics.Arcade.StaticGroup;
   emitter!: Phaser.GameObjects.Particles.ParticleEmitter;
-  staticStars: Phaser.GameObjects.Image[] = [];
+  staticStars: Phaser.GameObjects.Sprite[] = [];
 
   // Support fields
   graphics!: Phaser.GameObjects.Graphics;
@@ -152,31 +154,9 @@ export class Level2 extends Phaser.Scene {
     // CAMERA FOLLOWS PLAYER
     this.cameras.main.startFollow(this.player);
 
-    // CREATE STARS
-    for (let i = 0; i < this.starsToAdd; i++) {
-      const x = Phaser.Math.Between(
-        this.worldWidth * -0.5,
-        this.worldWidth * 0.5
-      );
-      const y = Phaser.Math.Between(
-        this.worldHeight * -0.5,
-        this.worldHeight * 0.5
-      ); // don't show near ground;
-      let star = this.add.image(x, y, "star").setScale(0.1);
-      this.staticStars.push(star);
-    }
-
     // CREATE LAND
     let leftCorner = { x: this.worldWidth * -0.75, y: this.worldHeight * 0.5 };
     let rightCorner = { x: this.worldWidth * 0.75, y: this.worldHeight * 0.5 };
-
-    /*
-    let size = (rightCorner.x - leftCorner.x) / increment + 1;
-    let heightData = new Array(size).fill(0);
-    for (let i = 0; i < heightData.length; i++) {
-      heightData[i] = Phaser.Math.Between(10, 25);
-    }
-      */
 
     let increment = 5;
     let heightSelect = 0;
@@ -194,6 +174,28 @@ export class Level2 extends Phaser.Scene {
       heightSelect++;
     }
 
+    // Place Landing Pad
+    this.landingPads = this.physics.add.staticGroup([
+      this.add.sprite(2080, 2830, "landingpad").setScale(0.75).setDepth(1),
+    ]);
+    this.physics.add.overlap(
+      this.player,
+      this.landingPads,
+      (playerShip: any, landingPad: any) => {
+        if (
+          pixelPerfectCheck(playerShip, landingPad, this.collisionCanvasContext)
+        ) {
+          const playerBody: Phaser.Physics.Arcade.Body =
+            playerShip.body as Phaser.Physics.Arcade.Body;
+          playerBody.position.y -= 0.1;
+          playerBody.setVelocityY(0);
+          playerBody.setVelocityX(playerBody.velocity.x * 0.9);
+        }
+      },
+      undefined,
+      this
+    );
+
     this.hillColliders = this.physics.add.staticGroup(
       //this.add.rectangle(100, 100, 200, 20).setOrigin(0, 0).setVisible(false),
       this.hills.map((h) =>
@@ -205,14 +207,6 @@ export class Level2 extends Phaser.Scene {
     );
 
     // Hill collisions
-    this.physics.add.collider(
-      this.staticStars,
-      this.hillColliders,
-      (star, hillCollider) => {
-        // Kill the star
-        star.destroy();
-      }
-    );
     this.physics.add.collider(this.player, this.hillColliders);
 
     // Below ground
@@ -222,6 +216,21 @@ export class Level2 extends Phaser.Scene {
       width: this.worldWidth * 2,
       height: 1200,
     });
+
+    // CREATE STARS
+    for (let i = 0; i < this.starsToAdd; i++) {
+      const x = Phaser.Math.Between(
+        this.worldWidth * -0.7, // Exceed map size for camera view
+        this.worldWidth * 0.7
+      );
+      const y = Phaser.Math.Between(
+        this.worldHeight * -0.5,
+        this.worldHeight * 0.5
+      ); // don't show near ground;
+      let star = this.add.sprite(x, y, "star").setScale(0.1);
+      star.setDepth(-100);
+      this.staticStars.push(star);
+    }
 
     // SETUP MESSAGES
     this.say("andrew", "Welcome to level 2 bitch.", 1, this);

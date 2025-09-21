@@ -5,6 +5,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   speed: number = 3.5;
   turnRate: number = 4;
   canFire: boolean = true;
+  textObject!: Phaser.GameObjects.Text;
+  debug: boolean = true;
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
     super(scene, x, y, "player");
@@ -18,6 +20,22 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDrag(0.999);
     this.setMaxVelocity(450);
     this.setAngle(-90);
+
+    // Setup debug stuff
+    if (this.debug) {
+      this.textObject = scene.add.text(
+        25,
+        25,
+        `Player Position: ${Math.floor(x)},${Math.floor(y)}`,
+        {
+          fontFamily: "Roboto, Helvetica, comic sans, serif",
+          fontSize: "24px",
+          backgroundColor: "white",
+          color: "#CD2500",
+        }
+      );
+      this.textObject.setScrollFactor(0);
+    }
   }
 
   customLogic(level: Level1 | Level2): void {
@@ -85,6 +103,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
           bullet.destroy();
         },
       });
+    }
+
+    if (this.debug) {
+      this.textObject.text = `Player Position: ${Math.floor(
+        this.x
+      )},${Math.floor(this.y)}`;
     }
   }
 }
