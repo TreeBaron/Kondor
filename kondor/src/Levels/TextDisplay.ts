@@ -1,5 +1,6 @@
+import { CustomLevel } from "./CustomLevel.ts";
 import { inXSeconds, inXMilliseconds } from "./Helper.ts";
-import Phaser from "phaser";
+import Phaser, { Scene } from "phaser";
 
 // Text display
 export class TextDisplay {
@@ -18,7 +19,7 @@ export class TextDisplay {
   image?: Phaser.GameObjects.Image;
 
   constructor(
-    level: any,
+    level: CustomLevel,
     textValue: string,
     seconds: number,
     character?: string
@@ -38,7 +39,7 @@ export class TextDisplay {
       this.text = textValue;
     }
 
-    this.image = level.add.image(marginLeft, 80 + marginTop, character);
+    this.image = level.add.image(marginLeft, 80 + marginTop, character || "");
     this.image?.setPosition(this.image.x + this.image.width / 2, this.image.y);
 
     if (this.image) {
@@ -49,6 +50,11 @@ export class TextDisplay {
     }
     this.image?.setScrollFactor(0);
     this.image?.setVisible(false);
+
+    level.uiElements.push(this.textObject);
+    if (this.image) {
+      level.uiElements.push(this.image);
+    }
   }
 
   start() {

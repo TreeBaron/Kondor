@@ -3,8 +3,9 @@ import { TextDisplay } from "./TextDisplay.ts";
 import { Player } from "../GameObjects/player.ts";
 import { getHillHeight } from "./Helper.ts";
 import { pixelPerfectCheck } from "./Helper.ts";
+import { CustomLevel } from "./CustomLevel.ts";
 
-export class Level2 extends Phaser.Scene {
+export class Level2 extends CustomLevel {
   // World Definition fields
   worldWidth: number = 6_000;
   worldHeight: number = 6_000;
@@ -272,6 +273,15 @@ export class Level2 extends Phaser.Scene {
         bullet.destroy();
         asteroid.destroy();
       }
+    );
+
+    // SETUP UI CAMERA
+    this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+    this.cameras.main.ignore(
+      this.children.list.filter((x) => this.uiElements.includes(x))
+    );
+    this.hudCam.ignore(
+      this.children.list.filter((x) => !this.uiElements.includes(x))
     );
   }
 

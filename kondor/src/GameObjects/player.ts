@@ -1,3 +1,4 @@
+import { CustomLevel } from "../Levels/CustomLevel.ts";
 import { Level1 } from "../Levels/Level1.ts";
 import { Level2 } from "../Levels/Level2.ts";
 
@@ -8,7 +9,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   textObject!: Phaser.GameObjects.Text;
   debug: boolean = true;
 
-  constructor(scene: Phaser.Scene, x: number, y: number) {
+  constructor(scene: CustomLevel, x: number, y: number) {
     super(scene, x, y, "player");
     scene.add.existing(this);
     scene.physics.add.existing(this);
@@ -35,6 +36,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         }
       );
       this.textObject.setScrollFactor(0);
+      scene.uiElements.push(this.textObject);
     }
   }
 

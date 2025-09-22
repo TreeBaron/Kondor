@@ -5,8 +5,9 @@ import {
 } from "./Helper.ts";
 import { TextDisplay } from "./TextDisplay.ts";
 import { Player } from "../GameObjects/player.ts";
+import { CustomLevel } from "./CustomLevel.ts";
 
-export class Level1 extends Phaser.Scene {
+export class Level1 extends CustomLevel {
   // World Definition fields
   worldWidth: number = 12_000;
   worldHeight: number = 12_000;
@@ -264,6 +265,21 @@ export class Level1 extends Phaser.Scene {
       },
       undefined,
       this
+    );
+
+    // SETUP UI CAMERA
+    this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+    this.hudCam.ignore(
+      this.children.list.filter((x) => !this.messages.includes(x))
+    );
+
+    // SETUP UI CAMERA
+    this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
+    this.cameras.main.ignore(
+      this.children.list.filter((x) => this.uiElements.includes(x))
+    );
+    this.hudCam.ignore(
+      this.children.list.filter((x) => !this.uiElements.includes(x))
     );
   }
 
