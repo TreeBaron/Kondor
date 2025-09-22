@@ -288,6 +288,9 @@ export class Level2 extends CustomLevel {
   update(time: number, delta: number): void {
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
 
+    // SMART CAM
+    this.smartCam(this.player, this);
+
     // UPDATE PLAYER
     this.player.customLogic(this);
 

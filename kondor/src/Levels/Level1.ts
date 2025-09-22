@@ -269,12 +269,6 @@ export class Level1 extends CustomLevel {
 
     // SETUP UI CAMERA
     this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
-    this.hudCam.ignore(
-      this.children.list.filter((x) => !this.messages.includes(x))
-    );
-
-    // SETUP UI CAMERA
-    this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
     this.cameras.main.ignore(
       this.children.list.filter((x) => this.uiElements.includes(x))
     );
