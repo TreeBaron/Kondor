@@ -1,6 +1,4 @@
 import { CustomLevel } from "../Levels/CustomLevel.ts";
-import { Level1 } from "../Levels/Level1.ts";
-import { Level2 } from "../Levels/Level2.ts";
 
 export class Player extends Phaser.Physics.Arcade.Sprite {
   speed: number = 3.5;
@@ -8,6 +6,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
   canFire: boolean = true;
   textObject!: Phaser.GameObjects.Text;
   debug: boolean = true;
+  emitter!: Phaser.GameObjects.Particles.ParticleEmitter;
 
   constructor(scene: CustomLevel, x: number, y: number) {
     super(scene, x, y, "player");
@@ -38,9 +37,32 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       this.textObject.setScrollFactor(0);
       scene.uiElements.push(this.textObject);
     }
+
+    // PLAYER SMOKE EMITTER
+    this.emitter = scene.add.particles(0, 0, "star", {
+      speed: { min: -200, max: -100 },
+      //angle: { min: 170, max: 190 },
+      lifespan: 300,
+      quantity: 2,
+      scale: { start: 0.3, end: 0 },
+      alpha: { start: 0, end: 1.0 },
+      emitting: false,
+    });
+    this.emitter.onParticleEmit((particle: any) => {
+      const angleOffset = -180;
+      let angleInDegrees =
+        this.angle + angleOffset + Phaser.Math.Between(-7, 7); // Or set it based on input
+      let velocity = scene.physics.velocityFromAngle(
+        angleInDegrees,
+        this.speed * 500
+      );
+      particle.velocityX = velocity.x; //+ Phaser.Math.Between(-200, 200);
+      particle.velocityY = velocity.y; // + Phaser.Math.Between(-200, 200);
+    });
+    this.emitter.startFollow(this);
   }
 
-  customLogic(level: Level1 | Level2): void {
+  customLogic(level: CustomLevel): void {
     const playerBody = level.player.body as Phaser.Physics.Arcade.Body;
 
     // PLAYER CONTROLS
@@ -68,11 +90,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
         playerBody.velocity.x + velocity.x,
         playerBody.velocity.y + velocity.y
       );
-      level.emitter.emitting = true;
+      this.emitter.emitting = true;
       level.player.setTexture("playerflame");
     } else {
       level.player.setTexture("player");
-      level.emitter.emitting = false;
+      this.emitter.emitting = false;
       level.player.setAcceleration(0); // needed
     }
 

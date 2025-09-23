@@ -1,6 +1,6 @@
 import { CustomLevel } from "./CustomLevel.ts";
 import { inXSeconds, inXMilliseconds } from "./Helper.ts";
-import Phaser, { Scene } from "phaser";
+import Phaser from "phaser";
 
 // Text display
 export class TextDisplay {
@@ -39,20 +39,22 @@ export class TextDisplay {
       this.text = textValue;
     }
 
-    this.image = level.add.image(marginLeft, 80 + marginTop, character || "");
-    this.image?.setPosition(this.image.x + this.image.width / 2, this.image.y);
+    if (character) {
+      this.image = level.add.image(marginLeft, 80 + marginTop, character);
+      this.image?.setPosition(
+        this.image.x + this.image.width / 2,
+        this.image.y
+      );
+      this.image?.setScrollFactor(0);
+      this.image?.setVisible(false);
+    }
 
-    if (this.image) {
+    level.uiElements.push(this.textObject);
+    if (this?.image) {
       this.textObject.setPosition(
         this.textObject.x + this.image.x,
         this.textObject.y
       );
-    }
-    this.image?.setScrollFactor(0);
-    this.image?.setVisible(false);
-
-    level.uiElements.push(this.textObject);
-    if (this.image) {
       level.uiElements.push(this.image);
     }
   }
@@ -61,7 +63,7 @@ export class TextDisplay {
     this.typeTextTimer = new Date();
     this.typeTextTimer = new Date();
     this.started = true;
-    if (this.image) {
+    if (this?.image) {
       this.image.setVisible(true);
     }
   }
@@ -105,7 +107,7 @@ export class TextDisplay {
 
       this.destroyed = true;
       this.textObject.destroy();
-      if (this.image) {
+      if (this?.image) {
         this.image.destroy();
       }
     }

@@ -189,3 +189,23 @@ export function getHillHeight(x: number, smoothness: number = 20.0) {
 
   return (f(x) + g(x) + a(x) * 4 + a(x)) / smoothness + 300.0;
 }
+
+export function getScaledWorldView(
+  cam: Phaser.Cameras.Scene2D.Camera,
+  targetZoom: number
+) {
+  const scaleFactor = targetZoom / cam.zoom;
+
+  const width = cam.worldView.width / scaleFactor;
+  const height = cam.worldView.height / scaleFactor;
+
+  const cx = cam.worldView.centerX;
+  const cy = cam.worldView.centerY;
+
+  return new Phaser.Geom.Rectangle(
+    cx - width / 2,
+    cy - height / 2,
+    width,
+    height
+  );
+}
