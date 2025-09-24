@@ -105,7 +105,7 @@ export class SpaceMap extends CustomLevel {
       const spriteSelect = sprites[Phaser.Math.Between(0, 2)];
       let planet = new Planet(this, spawnX, spawnY, spriteSelect);
       this.planets.add(planet);
-      planet.setScale(0.1 * Phaser.Math.Between(5, 15));
+      planet.setScale(0.25);
       planetsSpawned.push(planet);
       if (planetsSpawned.length > 1) {
         let previousPlanet = planetsSpawned[planetsSpawned.length - 2];
@@ -175,7 +175,7 @@ export class SpaceMap extends CustomLevel {
       this
     );
 
-    this.setupUICam();
+    this.setupUICam([this.asteroids, this.bullets]);
   }
 
   update(time: number, delta: number): void {

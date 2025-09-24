@@ -86,7 +86,7 @@ export class Moon extends CustomLevel {
     // Place Landing Pad and town
     this.add.sprite(2030, 2830, "peopletown").setScale(1.0).setDepth(-100);
     this.landingPads = this.physics.add.staticGroup([
-      this.add.sprite(2160, 2830, "landingpad").setScale(0.75).setDepth(1),
+      this.add.sprite(2160, 2730, "landingpad").setScale(0.5).setDepth(1),
     ]);
 
     this.cameras.main.setZoom(0.5);
@@ -176,7 +176,7 @@ export class Moon extends CustomLevel {
       }
     );
 
-    this.setupUICam();
+    this.setupUICam([this.bullets]);
   }
 
   update(time: number, delta: number): void {

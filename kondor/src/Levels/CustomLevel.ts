@@ -146,15 +146,16 @@ export class CustomLevel extends Phaser.Scene {
     ) as CanvasRenderingContext2D;
   }
 
-  setupUICam(): void {
+  setupUICam(others: any[]): void {
     // SETUP UI CAMERA
     this.hudCam = this.cameras.add(0, 0, this.scale.width, this.scale.height);
     this.cameras.main.ignore(
       this.children.list.filter((x) => this.uiElements.includes(x))
     );
-    this.hudCam.ignore(
-      this.children.list.filter((x) => !this.uiElements.includes(x))
-    );
+    this.hudCam.ignore([
+      ...others,
+      this.children.list.filter((x) => !this.uiElements.includes(x)),
+    ]);
   }
 
   loadAllAssets(): void {
@@ -178,14 +179,8 @@ export class CustomLevel extends Phaser.Scene {
     this.load.image("enemyflame", "assets/enemyflame.png");
     this.load.image("gasplanet", "assets/gasplanet.png");
     this.load.image("gastown", "assets/gastown.png");
-    this.load.image("land1platform", "assets/land1platform.png");
-    this.load.image("land2platform", "assets/land2platform.png");
-    this.load.image("land3platform", "assets/land3platform.png");
     this.load.image("landingpad", "assets/landingpad.png");
     this.load.image("peopletown", "assets/peopletown.png");
-    this.load.image("rawland1", "assets/rawland1.png");
-    this.load.image("rawland2", "assets/rawland2.png");
-    this.load.image("rawland3", "assets/rawland3.png");
     this.load.image("ringplanet", "assets/ringplanet.png");
 
     // Friends lol
