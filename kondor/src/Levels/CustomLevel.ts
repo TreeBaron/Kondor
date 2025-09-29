@@ -24,6 +24,8 @@ export class CustomLevel extends Phaser.Scene {
   keyS!: Phaser.Input.Keyboard.Key;
   keyD!: Phaser.Input.Keyboard.Key;
   keySpace!: Phaser.Input.Keyboard.Key;
+  keyQ!: Phaser.Input.Keyboard.Key;
+  keyE!: Phaser.Input.Keyboard.Key;
 
   smartCam(player: Phaser.GameObjects.Sprite, level: CustomLevel): void {
     const playerBody = player.body as Phaser.Physics.Arcade.Body;
@@ -134,6 +136,8 @@ export class CustomLevel extends Phaser.Scene {
     this.keyD = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
     this.keyW = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W);
     this.keySpace = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.keyQ = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Q);
+    this.keyE = keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E);
   }
 
   setupPreciseCollision(): void {
@@ -158,9 +162,45 @@ export class CustomLevel extends Phaser.Scene {
     ]);
   }
 
-  loadAllAssets(): void {
-    //console.log("preload() started.");
+  getAssetKeys(): string[] {
+    return [
+      "star",
+      "player",
+      "editor",
+      "playerflame",
+      "playerbullet",
+      "ammotown",
+      "asteroid1",
+      "asteroid2",
+      "asteroid3",
+      "cargoammo",
+      "cargofuel",
+      "earthplanet",
+      "enemy",
+      "enemybullet",
+      "enemyflame",
+      "gasplanet",
+      "gastown",
+      "landingpad",
+      "peopletown",
+      "ringplanet",
+      "andrew",
+      "marshall",
+      "jd",
+      "john",
+      "nancie",
+      "joebiden",
+    ];
+  }
 
+  loadAllAssets(): void {
+    let resourceNames = this.getAssetKeys();
+    for (let i = 0; i < resourceNames.length; i++) {
+      let name = resourceNames[i];
+      this.load.image(name, `assets/${name}.png`);
+    }
+
+    /*
     this.load.image("star", "assets/bluestar.png");
 
     this.load.image("player", "assets/player.png");
@@ -191,5 +231,6 @@ export class CustomLevel extends Phaser.Scene {
     this.load.image("john", "assets/john.png");
     this.load.image("nancie", "assets/nancie.png");
     this.load.image("joebiden", "assets/joebiden.png");
+    */
   }
 }

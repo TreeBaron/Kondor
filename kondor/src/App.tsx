@@ -3,6 +3,7 @@ import Phaser from "phaser";
 import styles from "./App.module.css";
 import { SpaceMap } from "./Levels/SpaceMap.ts";
 import { Moon } from "./Levels/Moon.ts";
+import { LevelEditor } from "./Levels/LevelEditor.ts";
 
 const App: React.FC = () => {
   const phaserGameRef = useRef<Phaser.Game | null>(null);
@@ -13,7 +14,7 @@ const App: React.FC = () => {
       const config: Phaser.Types.Core.GameConfig = {
         type: Phaser.AUTO,
         parent: "phaser-game-container",
-        scene: [new SpaceMap(), new Moon()],
+        scene: [new LevelEditor(), new SpaceMap(), new Moon()],
         min: {
           width: 920,
           height: 720,
